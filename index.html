@@ -44,9 +44,9 @@ body::before{
   position:fixed;
   inset:0;
   background:
-    radial-gradient(ellipse 80% 60% at 15% 20%, rgba(20,60,100,0.5) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 85% 70%, rgba(10,40,80,0.4) 0%, transparent 55%),
-    radial-gradient(ellipse 100% 80% at 50% 100%, rgba(5,20,40,0.6) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 60% at 15% 20%, rgba(20,60,100,0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 70%, rgba(10,40,80,0.3) 0%, transparent 55%),
+    radial-gradient(ellipse 100% 80% at 50% 100%, rgba(5,20,40,0.5) 0%, transparent 50%);
   pointer-events:none;
   z-index:0;
 }
@@ -70,6 +70,30 @@ body::before{
   background: var(--gold-dim);
 }
 
+/* ── MAGNETIC CUSTOM POINTER ── */
+#customPointer {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: difference;
+}
+#customPointerCircle {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--teal-bright);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+}
+
 /* ── NAV ── */
 nav{
   position:fixed;top:0;left:0;right:0;
@@ -91,7 +115,7 @@ nav.scrolled{
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 .nav-links{display:flex;gap:3rem;list-style:none}
 .nav-links a{
@@ -101,7 +125,15 @@ nav.scrolled{
 }
 .nav-links a:hover{color:var(--text)}
 
-/* Audio Control */
+/* Audio Control Layout */
+.audio-widget {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(15, 32, 53, 0.5);
+  border: 1px solid var(--rule);
+  padding: 0.25rem 0.75rem;
+}
 #audioMute {
   background: transparent;
   border: none;
@@ -111,6 +143,40 @@ nav.scrolled{
   transition: color 0.3s;
 }
 #audioMute:hover { color: var(--gold); }
+.audio-viz {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 24px;
+  height: 12px;
+}
+.viz-bar {
+  width: 3px;
+  height: 2px;
+  background: var(--teal-bright);
+}
+
+/* System Live Status Ticker */
+.system-ticker {
+  font-family: monospace;
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ticker-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3AAC6C;
+  box-shadow: 0 0 8px #3AAC6C;
+  animation: pulseGrad 1.5s infinite;
+}
+@keyframes pulseGrad {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
 
 /* ── HERO ── */
 #hero{
@@ -122,7 +188,7 @@ nav.scrolled{
   z-index:1;
 }
 
-#starCanvas{
+#matrixCanvas{
   position:absolute;inset:0;
   width:100%;height:100%;
   pointer-events:none;
@@ -270,7 +336,7 @@ section{
   background:linear-gradient(90deg,transparent,var(--rule),transparent);
 }
 
-/* ── PROJECTS (CREATIVE UPGRADE: 3D Tilting Cards) ── */
+/* ── PROJECTS (3D Tilt & Glow Layout) ── */
 .project-featured{
   background:var(--surface);
   border:1px solid var(--rule);
@@ -534,6 +600,24 @@ section{
   background:var(--gold-faint);
 }
 
+/* Floating HUD Dashboard Component */
+#hudDashboard {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  background: rgba(10, 22, 40, 0.85);
+  border: 1px solid var(--rule);
+  padding: 0.5rem 1rem;
+  font-family: monospace;
+  font-size: 0.6rem;
+  color: var(--teal-bright);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  backdrop-filter: blur(5px);
+}
+
 /* Terminal Console Easter Egg UI */
 #termContainer {
   position: fixed;
@@ -592,7 +676,7 @@ section{
   .about-layout{grid-template-columns:1fr;gap:4rem}
   #contact{padding:7rem 2rem 5rem}
   .contact-links{flex-direction:column;align-items:center;gap:2rem}
-  #termContainer { display: none !important; }
+  #termContainer, #hudDashboard, #customPointer, #customPointerCircle { display: none !important; }
 }
 
 @media(prefers-reduced-motion:reduce){
@@ -601,6 +685,16 @@ section{
 </style>
 </head>
 <body>
+
+<!-- DYNAMIC HUD ELEMENTS -->
+<div id="customPointer"></div>
+<div id="customPointerCircle"></div>
+
+<div id="hudDashboard">
+  <div class="system-ticker"><div class="ticker-pulse"></div><span>SYS_STATUS: ACTIVE</span></div>
+  <div>NODE_CONN: <span id="nodeCounter">1</span> active paths</div>
+  <div>LOC_LATENCY: <span id="latencyDisplay">24ms</span></div>
+</div>
 
 <nav id="nav">
   <a href="#hero" class="nav-logo">D·K</a>
@@ -611,14 +705,23 @@ section{
     <li><a href="#contact" data-en="Contact" data-fr="Contact">Contact</a></li>
   </ul>
   <div class="nav-right">
-    <button id="audioMute" title="Toggle Ambience">🔊</button>
+    <div class="audio-widget">
+      <button id="audioMute" title="Toggle Ambience">🔊</button>
+      <div class="audio-viz" id="audioViz">
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+      </div>
+    </div>
     <button id="langToggle" aria-label="Switch language">FR</button>
   </div>
 </nav>
 
 <!-- HERO -->
 <section id="hero">
-  <canvas id="starCanvas"></canvas>
+  <!-- Interactive Matrix Pipeline Grid Canvas -->
+  <canvas id="matrixCanvas"></canvas>
 
   <svg class="hero-sigil" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
     <g stroke="#4A8AAA" fill="none">
@@ -854,7 +957,7 @@ section{
     <div>Welcome to system core. Type 'help' for protocols.</div>
   </div>
   <div class="term-input-line">
-    <span>$</span><input type="text" id="termInput" autocomplete="off" focus>
+    <span>$</span><input type="text" id="termInput" autocomplete="off">
   </div>
 </div>
 
@@ -865,46 +968,53 @@ gsap.registerPlugin(ScrollTrigger);
 
 const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ── STAR FIELD ── */
+/* ── INTERACTIVE MATRIX GRAPH CANVASES ── */
 (function(){
-  const c = document.getElementById('starCanvas');
+  const c = document.getElementById('matrixCanvas');
   const ctx = c.getContext('2d');
-  let W, H, stars=[];
+  let W, H;
+  
+  const columns = [];
+  const fontSize = 10;
 
   function resize(){
     W = c.width = c.offsetWidth;
     H = c.height = c.offsetHeight;
-  }
-
-  function mkStars(){
-    stars=[];
-    for(let i=0;i<160;i++){
-      stars.push({
-        x:Math.random()*W,
-        y:Math.random()*H,
-        r:Math.random()*1.2+0.2,
-        a:Math.random()*0.6+0.1,
-        s:Math.random()*0.0008+0.0002,
-        t:Math.random()*Math.PI*2
-      });
+    const numCols = Math.floor(W / fontSize);
+    for (let i = 0; i < numCols; i++) {
+      if(columns[i] === undefined) columns[i] = Math.random() * -100;
     }
   }
 
-  function draw(ts){
-    ctx.clearRect(0,0,W,H);
-    stars.forEach(s=>{
-      s.t += s.s;
-      const alpha = s.a*(0.7+0.3*Math.sin(s.t));
-      ctx.beginPath();
-      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(180,210,240,${alpha})`;
-      ctx.fill();
-    });
+  // Binary array representation of matrix streams
+  const matrixChars = ["0", "1", "X", "Y", "N", "O", "V", "[", "]", "{", "}", "::"];
+
+  function draw(){
+    // Soft transparent baseline clear creates trailing glow effects natively
+    ctx.fillStyle = "rgba(10, 22, 40, 0.08)";
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = "rgba(58, 172, 172, 0.15)"; // Very faint tactical teal strings
+    ctx.font = fontSize + "px monospace";
+
+    for (let i = 0; i < columns.length; i++) {
+      const text = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+      const x = i * fontSize;
+      const y = columns[i] * fontSize;
+
+      ctx.fillText(text, x, y);
+
+      if (y > H && Math.random() > 0.98) {
+        columns[i] = 0;
+      }
+      columns[i]++;
+    }
     requestAnimationFrame(draw);
   }
 
-  resize(); mkStars(); draw(0);
-  window.addEventListener('resize',()=>{resize();mkStars();});
+  resize();
+  draw();
+  window.addEventListener('resize', resize);
 })();
 
 /* ── NAV ── */
@@ -913,7 +1023,6 @@ window.addEventListener('scroll',()=>{
 });
 
 if(!noMotion){
-
   /* ── HERO SEQUENCE ── */
   const tl = gsap.timeline({defaults:{ease:'power3.out'}});
 
@@ -1063,45 +1172,66 @@ if(!noMotion){
   });
 })();
 
-/* 🚀 CREATIVE UPGRADES BEGIN HERE 🚀 */
 
-/* ── 1. AMBIENT AUDIO SYSTEM ── */
+/* ── 1. WEB AUDIO API NODE MATRIX & VIZ ── */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let audioPlaying = false;
-let ambientOsc, ambientGain;
+let ambientOsc, ambientGain, analyser;
+let vizInterval;
+
+function updateAudioViz() {
+  if(!audioPlaying) return;
+  const fbcArray = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(fbcArray);
+  const bars = document.querySelectorAll('.viz-bar');
+  
+  bars.forEach((bar, i) => {
+    // Map internal sound processing to architectural heights directly
+    const val = fbcArray[i * 2] || 20;
+    const height = Math.max(2, Math.min(14, (val / 255) * 16));
+    bar.style.height = `${height}px`;
+  });
+  vizInterval = requestAnimationFrame(updateAudioViz);
+}
 
 function startAmbience() {
   if (audioPlaying) return;
-  // Deep space drone
+  
   ambientOsc = audioCtx.createOscillator();
   ambientGain = audioCtx.createGain();
+  analyser = audioCtx.createAnalyser();
+  
   ambientOsc.type = 'sine';
-  ambientOsc.frequency.setValueAtTime(55, audioCtx.currentTime); // Low A note
-  ambientGain.gain.setValueAtTime(0.02, audioCtx.currentTime); // Very quiet baseline
+  ambientOsc.frequency.setValueAtTime(60, audioCtx.currentTime); // Low 60Hz hum matching infrastructure grids
+  ambientGain.gain.setValueAtTime(0.015, audioCtx.currentTime);
   
   ambientOsc.connect(ambientGain);
-  ambientGain.connect(audioCtx.destination);
+  ambientGain.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  
   ambientOsc.start();
   audioPlaying = true;
   document.getElementById('audioMute').textContent = '🔊';
+  updateAudioViz();
 }
 
 function stopAmbience() {
   if (!audioPlaying) return;
   ambientOsc.stop();
   ambientOsc.disconnect();
+  cancelAnimationFrame(vizInterval);
+  document.querySelectorAll('.viz-bar').forEach(b => b.style.height = '2px');
   audioPlaying = false;
   document.getElementById('audioMute').textContent = '🔇';
 }
 
-// Tactical Click Feedback synth
 function playClickSound(freq = 400, type = 'sine', duration = 0.08) {
   if(!audioPlaying) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-  gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
   osc.connect(gain);
   gain.connect(audioCtx.destination);
@@ -1115,12 +1245,56 @@ document.getElementById('audioMute').addEventListener('click', () => {
 });
 
 document.querySelectorAll('.btn-audio, .btn, nav a, .p-link').forEach(btn => {
-  btn.addEventListener('click', () => playClickSound(600, 'triangle', 0.05));
-  btn.addEventListener('mouseenter', () => playClickSound(200, 'sine', 0.03));
+  btn.addEventListener('click', () => playClickSound(700, 'triangle', 0.04));
+  btn.addEventListener('mouseenter', () => playClickSound(180, 'sine', 0.02));
 });
 
 
-/* ── 2. TEXT CYBER-SCRAMBLE EFFECT ── */
+/* ── 2. MAGNETIC CURSOR SMOOTH INERTIA TRACKING ── */
+const ptr = document.getElementById('customPointer');
+const circle = document.getElementById('customPointerCircle');
+
+let mouseX = -100, mouseY = -100;
+let circleX = -100, circleY = -100;
+
+window.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  ptr.style.left = mouseX + 'px';
+  ptr.style.top = mouseY + 'px';
+});
+
+// Interpolation loops ensure clean 60fps tracking transitions
+function loopPointer() {
+  const dx = mouseX - circleX;
+  const dy = mouseY - circleY;
+  circleX += dx * 0.15;
+  circleY += dy * 0.15;
+  
+  circle.style.left = circleX + 'px';
+  circle.style.top = circleY + 'px';
+  requestAnimationFrame(loopPointer);
+}
+loopPointer();
+
+// Magnetic hover reactive states
+document.querySelectorAll('a, button, .dynamic-tilt, .skill-item').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    circle.style.width = '48px';
+    circle.style.height = '48px';
+    circle.style.background = 'rgba(58, 172, 172, 0.1)';
+    circle.style.borderColor = 'var(--gold)';
+  });
+  el.addEventListener('mouseleave', () => {
+    circle.style.width = '32px';
+    circle.style.height = '32px';
+    circle.style.background = 'transparent';
+    circle.style.borderColor = 'var(--teal-bright)';
+  });
+});
+
+
+/* ── 3. TEXT SCRAMBLE CYBERNETICS ── */
 const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
 document.querySelectorAll('.scramble-hover').forEach(el => {
   const originalText = el.textContent;
@@ -1143,22 +1317,20 @@ document.querySelectorAll('.scramble-hover').forEach(el => {
 });
 
 
-/* ── 3. INTUITIVE MOUSE RADIAL GLOW & 3D TILT ── */
+/* ── 4. 3D PERSPECTIVE TILT PLANES ── */
 document.querySelectorAll('.dynamic-tilt').forEach(card => {
   card.addEventListener('mousemove', (e) => {
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    // Pass coordinate variables directly to CSS radial gradients
     card.style.setProperty('--mx', `${(x / rect.width) * 100}%`);
     card.style.setProperty('--my', `${(y / rect.height) * 100}%`);
     
-    // Soft 3D tilt formula
     const xc = rect.width / 2;
     const yc = rect.height / 2;
-    const tiltX = (yc - y) / 16;
-    const tiltY = (x - xc) / 16;
+    const tiltX = (yc - y) / 14;
+    const tiltY = (x - xc) / 14;
     
     card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-5px)`;
   });
@@ -1169,8 +1341,19 @@ document.querySelectorAll('.dynamic-tilt').forEach(card => {
 });
 
 
-/* ── 4. SECURE TERMINAL CONSOLE EASTER EGG ── */
-// Type 'dev' anywhere on screen to launch a hidden system interface console
+/* ── 5. HUD DYNAMIC SIMULATION LOGS ── */
+setInterval(() => {
+  // Simulate network node discovery processing fluctuation
+  const nodes = Math.floor(Math.random() * 4) + 6;
+  document.getElementById('nodeCounter').textContent = nodes;
+  
+  // Simulate synthetic frame request latency variations
+  const latency = Math.floor(Math.random() * 12) + 18;
+  document.getElementById('latencyDisplay').textContent = `${latency}ms`;
+}, 3000);
+
+
+/* ── 6. MAIN FRAME CORES SHELL EASTER EGG ── */
 let keyHistory = "";
 window.addEventListener('keydown', (e) => {
   keyHistory += e.key.toLowerCase();
@@ -1201,7 +1384,7 @@ termInput.addEventListener('keydown', (e) => {
     } else if (cmd === 'about') {
       output.innerHTML = "> Target identity confirmed: Dylan King. Fields: Systems Engineering, Automation, Architecture integration.";
     } else if (cmd === 'sys') {
-      output.innerHTML = `> Core status: OPERATIONAL<br>> Location: Sophia Antipolis<br>> Active Shipped Modules: 4 units.`;
+      output.innerHTML = `> Core status: OPERATIONAL<br>> Active Shipped Modules: 4 units.`;
     } else if (cmd === 'clear') {
       termBody.innerHTML = "";
       termInput.value = "";
